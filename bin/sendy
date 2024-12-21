@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use v5.10;
+use strict;
+use warnings;
+
+use Dispatch::Fu;
+use Webservice::Sendy::API qw/6.1.2/;
+use Util::H2O::More        qw/Getopt2h2o ini2h2o o2d/;
+
+my $subcommand = shift @ARGV;
+
+#>>>
+dispatch {
+  xdefault shift, q{help};
+} $subcommand,
+  help       => \&do_help,
+;
+#<<< 
+
+sub do_help {
+    warn "warning: subcommand may be one of the following: 'help' (prints this!)\n";
+}
+
+__END__
