@@ -19,11 +19,20 @@ sub do_help();
 dispatch {
   xdefault shift, q{help};
 } $subcommand,
+  asubcount  => sub { get_active_subscriber_count(\@ARGV) },
   brands     => sub { get_brands(\@ARGV) },
   lists      => sub { get_lists(\@ARGV)  },
   help       => sub { do_help            },
 ;
 #<<< 
+
+sub get_active_subscriber_count {
+  my ($argv) = @_;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s list_id=s/;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->get_active_subscriber_count(brand_id => $o->list_id);
+  print $resp;
+}
 
 sub get_brands {
   my ($argv) = @_;

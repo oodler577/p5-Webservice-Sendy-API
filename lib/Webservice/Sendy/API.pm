@@ -31,20 +31,42 @@ sub form_data {
   };
 }
 
+sub get_active_subscriber_count {
+  my $self      = shift;
+  my $params    = {@_};
+#TODO - ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
+  my $list_id   = $params->{list_id} // (exists $self->config->defaults->{list_id})?$self->config->defaults->list_id:"unknown";
+  my $form_data = $self->form_data( list_id => $list_id);
+  my $URL       = sprintf "%s/subscribers/active-subscriber-count.php", $self->config->defaults->base_url; 
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+  # report Error
+  if ($resp->content and $resp->content =~ m/no/i) {
+    die sprintf "Server replied: %s!\n", $resp->content;
+  }
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+  return sprintf "%s %s\n", $resp->content // -1, $list_id;
+}
+
 sub get_brands() {
   my $self      = shift;
   my $form_data = $self->form_data();
   my $URL       = sprintf "%s/brands/get-brands.php", $self->config->defaults->base_url; 
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
-# TODO, handle error strings:
-#  Error: No data passed
-#  Error: API key not passed
-#  Error: Invalid API key
-#  Error: No brands found
+  # report Error
+  if ($resp->content and $resp->content =~ m/no/i) {
+    die sprintf "Server replied: %s!\n", $resp->content;
+  }
 
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
   if (not $resp->success) {
-    die sprintf ("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
   }
 
   $resp = HTTPTiny2h2o o2d $resp;
@@ -53,24 +75,19 @@ sub get_brands() {
 
 sub get_lists {
   my $self      = shift;
-  my $params    = { @_ };
+  my $params    = {@_};
   my $form_data = $self->form_data( brand_id => $params->{brand_id} // $self->config->defaults->brand_id // 1);
   my $URL       = sprintf "%s/lists/get-lists.php", $self->config->defaults->base_url; 
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
-# TODO, handle error strings:
-#  Error: No data passed
-#  Error: API key not passed
-#  Error: Invalid API key
-#  Error: Brand ID not passed
-#  Error: Brand does not exist
-#  Error: No lists found
-
-  if (not $resp->success) {
-    die sprintf ("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  # report Error
+  if ($resp->content and $resp->content =~ m/no/i) {
+    die sprintf "Server replied: %s!\n", $resp->content;
   }
-  elsif ($resp->content =~ m/brand does not exist/i) {
-    die "Server replied: Brand not found!\n";
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
   }
 
   $resp = HTTPTiny2h2o o2d $resp;
