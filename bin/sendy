@@ -5,20 +5,34 @@ use strict;
 use warnings;
 
 use Dispatch::Fu;
-use Webservice::Sendy::API qw/6.1.2/;
-use Util::H2O::More        qw/Getopt2h2o ini2h2o o2d/;
+use Webservice::Sendy::API qw//;
+use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
+
+my $HOME = (getpwuid($<))[7];
+my $CONFIG = "$HOME/.sendy.conf";
 
 my $subcommand = shift @ARGV;
+
+sub do_help();
 
 #>>>
 dispatch {
   xdefault shift, q{help};
 } $subcommand,
-  help       => \&do_help,
+  lists      => sub { get_lists(\@ARGV) },
+  help       => sub { do_help },
 ;
 #<<< 
 
-sub do_help {
+sub get_lists {
+  my ($argv) = @_;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s brand_id=i/;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->get_lists(brand_id => $o->brand_id);
+ddd $resp;
+}
+
+sub do_help() {
     warn "warning: subcommand may be one of the following: 'help' (prints this!)\n";
 }
 

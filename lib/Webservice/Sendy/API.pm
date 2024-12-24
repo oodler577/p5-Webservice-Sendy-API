@@ -1,3 +1,5 @@
+package Webservice::Sendy::API;
+
 use v5.10;
 use strict;
 use warnings;
@@ -6,21 +8,46 @@ my $VERSION = "6.1.2";
 
 use HTTP::Tiny;
 use JSON            qw/decode_json/;
-use Util::H2O::More qw/baptise ddd HTTPTiny2h2o h2o/;
-
-use constant {
-    BASEURL => "",  # get from config? API key also?
-};
-
-sub _auth {
-
-}
+use Util::H2O::More qw/baptise ddd HTTPTiny2h2o h2o ini2h2o o2d/;
 
 sub new {
-    my $pkg  = shift;
-    my $self = baptise { ua => HTTP::Tiny->new }, $pkg;
+    my $pkg = shift;
+    my $params = { @_, ua => HTTP::Tiny->new };
+    my $self = baptise $params, $pkg, qw/config/;
+    if (not $self->config) {
+      my $HOME = (getpwuid($<))[7];
+      $self->config("$HOME/.sendy.conf");
+    }
+    # update config field with contents of the config file
+    $self->config(ini2h2o $self->config);
     return $self;
 }
+
+sub form_data {
+  my $self = shift;
+  return {
+    api_key => $self->config->defaults->api_key,
+    @_,
+  };
+}
+
+sub get_lists {
+  my $self      = shift;
+  my $params    = { @_ };
+  my $form_data = $self->form_data( brand_id => $params->{brand_id} // $self->config->defaults->brand_id // 1);
+  my $URL       = sprintf "%s/lists/get-lists.php", $self->config->defaults->base_url; 
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+  if (not $resp->success) {
+    die sprintf ("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+  elsif ($resp->content =~ m/brand does not exist/i) {
+    die "Server replied: Brand not found!\n";
+  }
+  $resp = HTTPTiny2h2o o2d $resp;
+  return $resp->content;
+}
+
+777
 
 __END__
 
