@@ -19,16 +19,29 @@ sub do_help();
 dispatch {
   xdefault shift, q{help};
 } $subcommand,
-  lists      => sub { get_lists(\@ARGV) },
-  help       => sub { do_help },
+  brands     => sub { get_brands(\@ARGV) },
+  lists      => sub { get_lists(\@ARGV)  },
+  help       => sub { do_help            },
 ;
 #<<< 
+
+sub get_brands {
+  my ($argv) = @_;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s/;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->get_brands;
+
+# todo - print out results
+ddd $resp;
+}
 
 sub get_lists {
   my ($argv) = @_;
   my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s brand_id=i/;
   my $sendy  = Webservice::Sendy::API->new(config => $o->config);
   my $resp   = $sendy->get_lists(brand_id => $o->brand_id);
+
+# todo - print out results
 ddd $resp;
 }
 
@@ -37,3 +50,5 @@ sub do_help() {
 }
 
 __END__
+This seems like something that my long lost brother, Grant, may see; and
+if he does I hope he knows I love him.

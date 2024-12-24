@@ -31,18 +31,48 @@ sub form_data {
   };
 }
 
+sub get_brands() {
+  my $self      = shift;
+  my $form_data = $self->form_data();
+  my $URL       = sprintf "%s/brands/get-brands.php", $self->config->defaults->base_url; 
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+# TODO, handle error strings:
+#  Error: No data passed
+#  Error: API key not passed
+#  Error: Invalid API key
+#  Error: No brands found
+
+  if (not $resp->success) {
+    die sprintf ("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+  $resp = HTTPTiny2h2o o2d $resp;
+  return $resp->content;
+}
+
 sub get_lists {
   my $self      = shift;
   my $params    = { @_ };
   my $form_data = $self->form_data( brand_id => $params->{brand_id} // $self->config->defaults->brand_id // 1);
   my $URL       = sprintf "%s/lists/get-lists.php", $self->config->defaults->base_url; 
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+# TODO, handle error strings:
+#  Error: No data passed
+#  Error: API key not passed
+#  Error: Invalid API key
+#  Error: Brand ID not passed
+#  Error: Brand does not exist
+#  Error: No lists found
+
   if (not $resp->success) {
     die sprintf ("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
   }
   elsif ($resp->content =~ m/brand does not exist/i) {
     die "Server replied: Brand not found!\n";
   }
+
   $resp = HTTPTiny2h2o o2d $resp;
   return $resp->content;
 }
