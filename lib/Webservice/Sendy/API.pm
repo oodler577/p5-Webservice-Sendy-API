@@ -31,6 +31,38 @@ sub form_data {
   };
 }
 
+sub delete_subscriber {
+  my $self      = shift;
+  my $params    = {@_};
+
+  #NOTE - Util::H2O::More::ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
+  my $list_id   = $params->{list_id};
+  if (not $list_id) {
+     $list_id = '';
+     if ($self->config->defaults->{list_id}) {
+       $list_id = $self->config->defaults->list_id;
+     }
+  }
+  my $email     = $params->{email};
+  die "email required!\n" if not $email;
+
+  my $form_data = $self->form_data(list_id => $list_id, email => $email);
+  my $URL       = sprintf "%s/subscribers/delete.php", $self->config->defaults->base_url;
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+  # report Error
+  if ($resp->content and $resp->content =~ m/no/i) {
+    die sprintf "Server replied: %s!\n", $resp->content;
+  }
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+  return sprintf "%s %s %s\n", ($resp->content == 1)?"Deleted":$resp->content, $list_id, $email;
+}
+
 sub get_subscription_status {
   my $self      = shift;
   my $params    = {@_};
@@ -43,10 +75,11 @@ sub get_subscription_status {
        $list_id = $self->config->defaults->list_id;
      }
   }
-  my $email     = $params->{email} // '';
+  my $email     = $params->{email};
+  die "email required!\n" if not $email;
 
   my $form_data = $self->form_data(list_id => $list_id, email => $email);
-  my $URL       = sprintf "%s/subscribers/subscription-status.php", $self->config->defaults->base_url; 
+  my $URL       = sprintf "%s/subscribers/subscription-status.php", $self->config->defaults->base_url;
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # catch "Not Subscribed"
@@ -81,7 +114,7 @@ sub get_active_subscriber_count {
   }
 
   my $form_data = $self->form_data( list_id => $list_id);
-  my $URL       = sprintf "%s/subscribers/active-subscriber-count.php", $self->config->defaults->base_url; 
+  my $URL       = sprintf "%s/subscribers/active-subscriber-count.php", $self->config->defaults->base_url;
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
@@ -100,7 +133,7 @@ sub get_active_subscriber_count {
 sub get_brands() {
   my $self      = shift;
   my $form_data = $self->form_data();
-  my $URL       = sprintf "%s/brands/get-brands.php", $self->config->defaults->base_url; 
+  my $URL       = sprintf "%s/brands/get-brands.php", $self->config->defaults->base_url;
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
@@ -121,7 +154,7 @@ sub get_lists {
   my $self      = shift;
   my $params    = {@_};
   my $form_data = $self->form_data( brand_id => $params->{brand_id} // $self->config->defaults->brand_id // 1);
-  my $URL       = sprintf "%s/lists/get-lists.php", $self->config->defaults->base_url; 
+  my $URL       = sprintf "%s/lists/get-lists.php", $self->config->defaults->base_url;
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
