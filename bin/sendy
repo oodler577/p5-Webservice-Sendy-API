@@ -26,13 +26,23 @@ dispatch {
 } $subcommand,
   asubcount  => sub { get_active_subscriber_count(\@ARGV) },
   brands     => sub { get_brands(\@ARGV) },
-  delsub     => sub { delete_subscriber(\@ARGV) },
+  delete     => sub { delete_subscriber(\@ARGV) },
   lists      => sub { get_lists(\@ARGV)  },
   substatus  => sub { get_subscription_status(\@ARGV) },
+  unsubcribe => sub { unsubscribe(\@ARGV) },
 
   help       => sub { do_help            },
 ;
 #<<<
+
+sub unsubscribe {
+  my ($argv) = @_;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s list_id=s email=s/;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->unsubscribe(list_id => $o->list_id, email => $o->email);
+  print $resp;
+  exit EXIT_SUCCESS;
+}
 
 sub delete_subscriber {
   my ($argv) = @_;
