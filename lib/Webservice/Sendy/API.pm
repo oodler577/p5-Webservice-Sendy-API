@@ -31,6 +31,72 @@ sub form_data {
   };
 }
 
+sub _country_codes {
+  return qw(
+    AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ
+    BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS
+    BT BU BV BW BY BZ CA CC CD CF CG CH CI CK CL CM
+    CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ
+    EC EE EG EH ER ES ET FI FJ FM FO FR GA GB GD
+    GE GF GG GH GI GL GM GN GP GQ GR GT GU GW GY
+    HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS
+    IT JE JM JO JP KE KG KH KI KM KN KP KR KW
+    KY KZ LA LB LC LI LK LR LS LT LU LV LY
+    MA MB MC MD ME MF MG MH MK ML MM MN MO MP
+    MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF
+    NG NI NL NO NP NR NU NZ OM PA PE PF PG PH
+    PK PL PM PN PR PT PW PY QA RE RO RS RU RW
+    SA SB SC SD SE SG SH SI SJ SK SL SM SN
+    SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ
+    TK TL TM TN TO TR TT TV TZ UA UG US UY
+    UZ VA VC VE VG VI VN VU WF WG WS YE YT ZA
+    ZM ZW
+  );
+}
+
+sub subscribe {
+  my $self     = shift;
+  my $params   = {@_};
+  my @required = qw/email list_id/;
+  my @optional = qw/name country ipaddress referrer gdpr silent hp/;
+  h2o $params, @required, @optional;
+
+  #NOTE - Util::H2O::More::ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
+  if (not $params->list_id) {
+     $params->list_id('');
+     if ($self->config->defaults->{list_id}) {
+       $params->list_id($self->config->defaults->list_id);
+     }
+  }
+  die "email required!\n" if not $params->email;
+
+  # processing other white-listed options
+  my $other_options = {}; 
+  foreach my $opt (@optional) {
+    if (defined $params->$opt) {
+      $other_options->{$opt} = $params->$opt;
+    }
+  }
+
+  my $form_data = $self->form_data(list => $params->list_id, email => $params->email, boolean => "true", %$other_options);
+  my $URL       = sprintf "%s/subscribe", $self->config->defaults->base_url;
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+  # report Error
+  if ($resp->content and $resp->content =~ m/Already|missing|not|valid|Bounced|suppressed/) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[subscribe] Server replied: %s!\n", $msg;
+  }
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+  return sprintf "%s %s %s\n", ($resp->content eq "1")?"Subscribed":$resp->content, $params->list_id, $params->email;
+}
+
 #NOTE: this call is different from "delete_subscriber" in that it just marks the
 # subscriber as unsubscribed; "delete_subscriber" fully removes it from the list (in the DB)
 #NOTE: this call uses a different endpoint than the others ...
@@ -54,8 +120,10 @@ sub unsubscribe {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/Some|valid|not/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[unsubscribe] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -65,7 +133,6 @@ sub unsubscribe {
 
   return sprintf "%s %s %s\n", ($resp->content == 1)?"Unsubscribed":$resp->content, $list_id, $email;
 }
-
 
 #NOTE: this call is different from "unsubscribe" in that it deletes the subscriber
 # "unsubscribe" simply marks them as unsubscribed
@@ -89,8 +156,10 @@ sub delete_subscriber {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/No|valid|List|not/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[delete] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -126,8 +195,10 @@ sub get_subscription_status {
   }
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/No|vlaid|not/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[status] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -156,8 +227,10 @@ sub get_active_subscriber_count {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/No|valid|not/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[count] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -175,8 +248,10 @@ sub get_brands() {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/No|valid/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[brands] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -196,8 +271,10 @@ sub get_lists {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/no/i) {
-    die sprintf "Server replied: %s!\n", $resp->content;
+  if ($resp->content and $resp->content =~ m/No|valid|not/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[lists] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)

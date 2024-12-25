@@ -24,16 +24,27 @@ sub do_help();
 dispatch {
   xdefault shift, q{help};
 } $subcommand,
-  asubcount  => sub { get_active_subscriber_count(\@ARGV) },
-  brands     => sub { get_brands(\@ARGV) },
-  delete     => sub { delete_subscriber(\@ARGV) },
-  lists      => sub { get_lists(\@ARGV)  },
-  substatus  => sub { get_subscription_status(\@ARGV) },
-  unsubcribe => sub { unsubscribe(\@ARGV) },
+  count       => sub { get_active_subscriber_count(\@ARGV) },
+  brands      => sub { get_brands(\@ARGV) },
+  delete      => sub { delete_subscriber(\@ARGV) },
+  lists       => sub { get_lists(\@ARGV) },
+  subscribe   => sub { subscribe(\@ARGV) },
+  status      => sub { get_subscription_status(\@ARGV) },
+  unsubscribe => sub { unsubscribe(\@ARGV) },
 
-  help       => sub { do_help            },
+  help        => sub { do_help            },
 ;
 #<<<
+
+sub subscribe {
+  my ($argv) = @_;
+  my @opts   = qw/config=s name=s email=s list_id=s country=s ipaddress=s referrer=s gdpr=s silent hp=s/;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, @opts;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->subscribe(%{o2d $o});
+  print $resp;
+  exit EXIT_SUCCESS;
+}
 
 sub unsubscribe {
   my ($argv) = @_;
