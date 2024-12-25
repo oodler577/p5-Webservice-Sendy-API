@@ -31,11 +31,55 @@ sub form_data {
   };
 }
 
+sub get_subscription_status {
+  my $self      = shift;
+  my $params    = {@_};
+
+  #NOTE - Util::H2O::More::ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
+  my $list_id   = $params->{list_id};
+  if (not $list_id) {
+     $list_id = '';
+     if ($self->config->defaults->{list_id}) {
+       $list_id = $self->config->defaults->list_id;
+     }
+  }
+  my $email     = $params->{email} // '';
+
+  my $form_data = $self->form_data(list_id => $list_id, email => $email);
+  my $URL       = sprintf "%s/subscribers/subscription-status.php", $self->config->defaults->base_url; 
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+  # catch "Not Subscribed"
+  if ($resp->content eq "Email does not exist in list") {
+    return sprintf "Not Subscribed %s %s\n", $list_id, $email;
+  }
+
+  # report Error
+  if ($resp->content and $resp->content =~ m/no/i) {
+    die sprintf "Server replied: %s!\n", $resp->content;
+  }
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+  return sprintf "%s %s %s\n", $resp->content, $list_id, $email;
+}
+
 sub get_active_subscriber_count {
   my $self      = shift;
   my $params    = {@_};
-#TODO - ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
-  my $list_id   = $params->{list_id} // (exists $self->config->defaults->{list_id})?$self->config->defaults->list_id:"unknown";
+
+  #NOTE - Util::H2O::More::ini2h2o needs a "autoundef" option! Workaround is use of "exists" and ternary
+  my $list_id   = $params->{list_id};
+  if (not $list_id) {
+     $list_id = '';
+     if ($self->config->defaults->{list_id}) {
+       $list_id = $self->config->defaults->list_id;
+     }
+  }
+
   my $form_data = $self->form_data( list_id => $list_id);
   my $URL       = sprintf "%s/subscribers/active-subscriber-count.php", $self->config->defaults->base_url; 
   my $resp      = h2o $self->ua->post_form($URL, $form_data);

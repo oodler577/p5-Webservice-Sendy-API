@@ -8,6 +8,11 @@ use Dispatch::Fu;
 use Webservice::Sendy::API qw//;
 use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
 
+use constant {
+  EXIT_SUCCESS => 0,
+  EXIT_ERROR   => 1,
+};
+
 my $HOME = (getpwuid($<))[7];
 my $CONFIG = "$HOME/.sendy.conf";
 
@@ -22,16 +27,28 @@ dispatch {
   asubcount  => sub { get_active_subscriber_count(\@ARGV) },
   brands     => sub { get_brands(\@ARGV) },
   lists      => sub { get_lists(\@ARGV)  },
+  substatus  => sub { get_subscription_status(\@ARGV) },
+
   help       => sub { do_help            },
 ;
 #<<< 
+
+sub get_subscription_status {
+  my ($argv) = @_;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s list_id=s email=s/;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->get_subscription_status(list_id => $o->list_id, email => $o->email);
+  print $resp;
+  exit EXIT_SUCCESS;
+}
 
 sub get_active_subscriber_count {
   my ($argv) = @_;
   my $o      = Getopt2h2o $argv, { config => $CONFIG }, qw/config=s list_id=s/;
   my $sendy  = Webservice::Sendy::API->new(config => $o->config);
-  my $resp   = $sendy->get_active_subscriber_count(brand_id => $o->list_id);
+  my $resp   = $sendy->get_active_subscriber_count(list_id => $o->list_id);
   print $resp;
+  exit EXIT_SUCCESS;
 }
 
 sub get_brands {
@@ -42,6 +59,8 @@ sub get_brands {
 
 # todo - print out results
 ddd $resp;
+
+  return EXIT_SUCCESS;
 }
 
 sub get_lists {
@@ -52,6 +71,8 @@ sub get_lists {
 
 # todo - print out results
 ddd $resp;
+
+  return EXIT_SUCCESS;
 }
 
 sub do_help() {
