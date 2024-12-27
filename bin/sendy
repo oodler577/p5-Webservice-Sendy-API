@@ -25,6 +25,7 @@ dispatch {
   xdefault shift, q{help};
 } $subcommand,
   count       => sub { get_active_subscriber_count(\@ARGV) },
+  create      => sub { create_campaign(\@ARGV) },
   brands      => sub { get_brands(\@ARGV) },
   delete      => sub { delete_subscriber(\@ARGV) },
   lists       => sub { get_lists(\@ARGV) },
@@ -35,6 +36,19 @@ dispatch {
   help        => sub { do_help            },
 ;
 #<<<
+
+# .. add parameters for create_campaign
+sub create_campaign {
+  my ($argv) = @_;
+  my @opts   = qw/config=s from_name=s from_email=s reply_to=s title=s subject=s plain_text=s html_text=s
+                  list_ids=s segment_ids=s exclude_list_ids=s brand_id=s query_string=s schedule_date_time=s
+                  schedule_timezone=s track_opens track_clicks send_campaign/;
+  my $o      = Getopt2h2o $argv, { config => $CONFIG }, @opts;
+  my $sendy  = Webservice::Sendy::API->new(config => $o->config);
+  my $resp   = $sendy->create_campaign(%{o2d $o});
+  print $resp;
+  exit EXIT_SUCCESS;
+}
 
 sub subscribe {
   my ($argv) = @_;

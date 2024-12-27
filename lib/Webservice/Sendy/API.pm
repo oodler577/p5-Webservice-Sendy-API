@@ -31,6 +31,79 @@ sub form_data {
   };
 }
 
+# .. modify for create_campaign
+sub create_campaign {
+  my $self     = shift;
+  my $params   = {@_};
+
+  my @required = qw/from_name from_email reply_to title subject html_text
+                  list_ids brand_id track_opens track_clicks send_campaign/;
+  my @optional = qw/plain_text segment_ids exclude_list_ids query_string schedule_date_time schedule_timezone/;
+
+  h2o $params, @required, @optional;
+
+  # FATAL error if title, subject, and html_text is not provided; the other fields
+  # required by the API can use defaults in the configuration file, listed after
+  # the check:
+
+  # look up hash for defaults to use
+  my $required_defaults = h2o {
+    title         => undef,
+    subject       => undef,
+    html_text     => undef,
+    from_name     => $self->config->campaign->from_name,
+    from_email    => $self->config->campaign->from_email,
+    reply_to      => $self->config->campaign->reply_to,
+    brand_id      => $self->config->defaults->brand_id,
+    list_ids      => $self->config->defaults->list_id,
+    track_opens   => 0,
+    track_clicks  => 0,
+    send_campaign => 0,
+  };
+
+
+  my $required_options = {};
+  foreach my $param (keys %$required_defaults) { 
+    if (not defined $params->$param and defined $required_defaults->$param) {
+      $params->$param($required_defaults->$param);
+    }
+    # FATAL for anything in $required_defaults set to 'undef'
+    elsif (not defined $params->$param and not defined $required_defaults->$param) {
+      die sprintf "[campaign] creation requires: %s; died on '%s'\n", join(",", keys %$required_defaults), $param;
+    }
+    $required_options->{$param} = $params->$param;
+  }
+
+  # processing other white-listed options in @optional
+  my $other_options = {}; 
+  foreach my $opt (@optional) {
+    if (defined $params->$opt) {
+      $other_options->{$opt} = $params->$opt;
+    }
+  }
+
+  my $form_data = $self->form_data(%$required_options, %$other_options);
+  my $URL       = sprintf "%s/api/campaigns/create.php", $self->config->defaults->base_url;
+  my $resp      = h2o $self->ua->post_form($URL, $form_data);
+
+  # report Error
+  if ($resp->content and $resp->content =~ m/Already|missing|not|valid|Unable/i) {
+    my $msg = $resp->content;
+    $msg =~ s/\.$//g;
+    die sprintf "[create] Server replied: %s!\n", $msg;
+  }
+
+  # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
+  if (not $resp->success) {
+    die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
+  }
+
+ddd $resp;
+
+  #return sprintf "%s %s %s\n", ($resp->content eq "1")?"Subscribed":$resp->content, $params->list_id, $params->email;
+}
+
+
 sub _country_codes {
   return qw(
     AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ
@@ -83,7 +156,7 @@ sub subscribe {
   my $resp      = h2o $self->ua->post_form($URL, $form_data);
 
   # report Error
-  if ($resp->content and $resp->content =~ m/Already|missing|not|valid|Bounced|suppressed/) {
+  if ($resp->content and $resp->content =~ m/Already|missing|not|valid|Bounced|suppressed/i) {
     my $msg = $resp->content;
     $msg =~ s/\.$//g;
     die sprintf "[subscribe] Server replied: %s!\n", $msg;
