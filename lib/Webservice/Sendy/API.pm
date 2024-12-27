@@ -408,7 +408,8 @@ mode or automatically change permissions on the file.
   api_key=sOmekeyFromSendy
   base_url=https://my.domain.tld/sendy
   brand_id=1
-  list_id=lumdsPnpwnazrcoOzKJ763Ow
+  list_id=mumdsQnpwnazscoOzKJ763Ow
+  
   ; campaign information used for default brand_id 
   [campaign]
   from_name=List Sender Name
