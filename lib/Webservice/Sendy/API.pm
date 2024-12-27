@@ -405,15 +405,15 @@ mode or automatically change permissions on the file.
 
   ; defaults used for specified options
   [defaults]
-  api_key=YtYbpUY7BGHqGeRpNhIn
-  base_url=https://crm.acutisdata.com/sendy 
+  api_key=sOmekeyFromSendy
+  base_url=https://my.domain.tld/sendy
   brand_id=1
   list_id=lumdsPnpwnazrcoOzKJ763Ow
   ; campaign information used for default brand_id 
   [campaign]
-  from_name=BoyScoutPatch.com c/o BSPi
-  from_email=support@boyscoutpatch.info
-  reply_to=support@boyscoutpatch.info
+  from_name=List Sender Name
+  from_email=your-email-list@domain.tld
+  reply_to=some-other-reply-to@domain.tld
 
 =head1 AUTHOR
 
