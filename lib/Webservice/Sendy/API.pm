@@ -16,7 +16,7 @@ sub new {
     my $self = baptise $params, $pkg, qw/config/;
     if (not $self->config) {
       my $HOME = (getpwuid($<))[7];
-      $self->config("$HOME/.sendy.conf");
+      $self->config("$HOME/.sendy.ini");
     }
     # update config field with contents of the config file
     $self->config(ini2h2o $self->config);
@@ -365,19 +365,55 @@ __END__
 
 =head1 NAME
 
-Webservice::Sendy::API - Perl client for Sendy's integration API
+Webservice::Sendy::API - Sendy's integration API Perl client and commandline utility
 
 =head1 SYNOPSIS
 
-=head2 C<sendy> Commandline Client
+  use v5.10;   # enables "say" and turns on "use warnings;"
+  use strict;
+  use Webservice::Sendy::API qw//;
+  
+  my $sendy  = Webservice::Sendy::API->new; # looks for default config file 
+  my $brands = $sendy->get_brands;
+  
+  foreach my $key (sort keys %$brands) {
+    my $brand = $brands->$key;
+    printf "%-3d  %s\n", $brand->id, $brand->name;
+  }
 
 =head1 DESCRIPTION
 
-=head2 Internal Methods
+=head1 METHODS
+
+=head1 C<sendy> COMMANDLINE CLIENT
+
+When installed, this module provides the commandline client, C<sendy>. This script
+is both a real tool and a reference implementation for a useful client. It is meant
+for use on the commandline or in cron or shell scripts. It's not intended to be
+used inside of Perl scripts. It is recommended the library be used directly inside
+of the Perl scripts. Checkout the source code of C<sendy> to see how to do it, if
+this documentation is not sufficient.
 
 =head1 ENVIRONMENT
 
-Nothing special required.
+=head2 C<$HOME/.sendy.ini> Configuration
+
+A configuration file is required. The default file is C<$HOME/.sendy.ini>.
+It is I<highly> recommended that this file be C<chmod 600> (read only to
+the C<$USER>. B<Note:> Future versions of this module may enforce this file
+mode or automatically change permissions on the file.
+
+  ; defaults used for specified options
+  [defaults]
+  api_key=YtYbpUY7BGHqGeRpNhIn
+  base_url=https://crm.acutisdata.com/sendy 
+  brand_id=1
+  list_id=lumdsPnpwnazrcoOzKJ763Ow
+  ; campaign information used for default brand_id 
+  [campaign]
+  from_name=BoyScoutPatch.com c/o BSPi
+  from_email=support@boyscoutpatch.info
+  reply_to=support@boyscoutpatch.info
 
 =head1 AUTHOR
 
