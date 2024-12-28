@@ -396,41 +396,119 @@ implements the Sendy API, whichis based on simple HTTP POST. Use the API to
 integrate Sendy programmatically with your website or application. Some APIs
 may require the latest version of Sendy (currently version 6.1.2).
 
+Some sanity checking is done in the wrapper functions, but Sendy's API tend
+to do a good job of validation on the server side, and their error messages
+are pretty clear about what the issue is. In most cases, little additional
+validation is provided by this module and error messages are passed directly
+to the caller.
+
+Sendy's API is not really I<RESTful> because it doesn't use the HTTP status
+field. All calls return a C<200 OK>, therefore the L<HTTP::Tiny> module that
+is used as the user agent in this module is forced to assume all calls are
+successful. In order to determine an error, the actual content of the response
+must be checked. This module does do that.
+
 =head1 METHODS
 
 =over 4
 
-=item C<create>
+=item C<create_campaign>
 
-Creates an email campaign; which can be safed as a draft, scheduled for sending, or sent immediately.
+Creates an email campaign; which can be safed as a draft, scheduled for sending,
+or sent immediately.
+
+It is a FATAL error if title, subject, and html_text is not provided; the
+other fields required by the API can use defaults in the configuration file,
+listed after the check:
+
+B<Required fields:> from_name*, from_email*, reply_to*, title, subject, html_text, list_ids*,
+brand_id*, track_opens, track_clicks, send_campaign (* = uses defaults in C<.sendy.ini>)
+
+B<Optional fields:> plain_text, segment_ids, exclude_list_ids, query_string, schedule_date_time,
+schedule_timezone
+
+See more information about the call on Sendy's specification, L<https://sendy.co/api#create-send-campaigns>.
 
 =item C<subscribe>
 
-Subsribes an email address to a list.
+Subscribes an email address to a list.
+
+B<Required fields:> email, list_id
+
+B<Optional fields:> name, country, ipaddress, referrer, gdpr, silent, hp*
+
+* C<hp> is a I<honey pot> field, if it is populated then the server side
+handler assumes it's been submitted by a bot, and will fail. So don't use it.
+
+For a full description of the fields is available at L<https://sendy.co/api#subscribe>.
 
 =item C<unsubscribe>
 
 Unsubscribes an email address from a list, but keeps it in the list (marks it inactive).
 
+B<Required fields:> email, list_id
+
+If not provided, C<list_id> is pulled from the configuration file (if set).
+
+This method automatically sets the field I<boolean> to C<true>; this is so the
+response if plain-text. There is no way to change this value without modifying
+the module. The alternative is to parse through a mess of HTML. This can me changed
+in future versions, but feedback is needed to know if this is useful.
+
+For a full description of the fields is available at L<https://sendy.co/api#unsubscribe>.
+
 =item C<delete>
 
 Deletes an email address from a list.
+
+B<Required fields:> email, list_id
+
+If not provided, C<list_id> is pulled from the configuration file (if set).
+
+This method automatically sets the field I<boolean> to C<true>; this is so the
+response if plain-text. There is no way to change this value without modifying
+the module. The alternative is to parse through a mess of HTML. This can me changed
+in future versions, but feedback is needed to know if this is useful.
+
+For a full description of the fields is available at L<https://sendy.co/api#delete-subscriber>.
 
 =item C<get_subscriber_count>
 
 Returns the number of active subscribers that are in a list.
 
+B<Required fields:> list_id
+
+If not provided, C<list_id> is pulled from the configuration file (if set).
+
+For a full description of the fields is available at L<https://sendy.co/api#subscriber-count>.
+
 =item C<get_subscriber_status>
 
 Returns the status of an email address with respect to a specific email list.
 
+B<Required fields:> email, list_id
+
+If not provided, C<list_id> is pulled from the configuration file (if set).
+
+For a full description of the fields is available at L<https://sendy.co/api#subscription-status>.
+
 =item C<get_brands>
 
-Returns all brands.
+No fields are required, C<brands> are the highest level of entities available to list. All other
+calls require either a C<brand_id> or C<list_id>(s) to be specified.
+
+Returns all brands. Brand Ids are numbers (1 through #brands).
+
+For a full description of the fields is available at L<https://sendy.co/api#get-brands>.
 
 =item C<get_lists>
 
-Returns all lists based on a specified brand id.
+Returns all lists based on a specified brand id. List Ids are alphanumeric hashes, therefore
+calls that operate using list specifier(s) do not also need to know the associated C<brand_id>..
+
+B<Required fields:> brand_id
+
+For a full description of the fields is available at L<https://sendy.co/api#get-brands>.
 
 =back
 
