@@ -532,33 +532,65 @@ B<Commands>
 
 Returns list of brands by Id to C<STDOUT>.
 
+Usage,
+
+  sendy brands [--config alt-config.ini]
+
 =item C<count>
 
 Returns count of the specified list to C<STDOUT>.
+
+Usage
+
+  sendy lists [--config alt-config.ini] --brand_id BRANDID
 
 =item C<create>
 
 Creates an email campaign based on specified options. Status is returned via C<STDOUT>.
 
+Usage,
+
+  sendy create [--config alt-config.ini] --list_ids A,B,C,...
+
 =item C<delete>
 
 Deletes the provided email from provided list Id, returns status to C<STDOUT>.
+
+Usage
+
+  sendy delete [--config alt-config.ini] --list_id LISTID --email email@domain.tld
 
 =item C<lists>
 
 Returns list of email lists for provided brand Id to C<STDOUT>.
 
+Usage
+
+  sendy lists [--config alt-config.ini] --brandid BRAND
+
 =item C<status>
 
 Returns status of the provided email address to provided list Id, via C<STDOUT>.
+
+Usage
+
+  sendy status [--config alt-config.ini] --list_id LISTID --email email@domain.tld
 
 =item C<subscribe>
 
 Subscribes the provided email address to the provided list Id, result returned via C<STDOUT>.
 
+Usage
+
+  sendy subscribe [--config alt-config.ini] --list_id LISTID --email email@domain.tld
+
 =item C<unsubscribe>
 
 Unsubscribes the provided email address from the provided list Id, result returned via C<STDOUT>.
+
+Usage
+
+  sendy unsubscribe [--config alt-config.ini] --list_id LISTID --email email@domain.tld
 
 =back
 
@@ -587,6 +619,8 @@ mode or automatically change permissions on the file.
 =head1 AUTHOR
 
 Brett Estrade L<< <oodler@cpan.org> >>
+
+Visit me at L<https://perlclientdirectory.com>.
 
 =head1 BUGS
 
