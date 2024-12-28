@@ -365,7 +365,8 @@ __END__
 
 =head1 NAME
 
-Webservice::Sendy::API - Sendy's integration API Perl client and commandline utility
+Webservice::Sendy::API - Sendy's integration API Perl client and commandline
+utility
 
 =head1 SYNOPSIS
 
@@ -381,9 +382,57 @@ Webservice::Sendy::API - Sendy's integration API Perl client and commandline uti
     printf "%-3d  %s\n", $brand->id, $brand->name;
   }
 
+B<NOTE:> This module requires a configuration file to be set up. See the L<Environment>
+section below to learn more.
+
 =head1 DESCRIPTION
 
+Sendy is a self-hosted email marketing application that integrates with Amazon
+SES (Simple Email Service) to send bulk emails at a low cost. It provides
+a user-friendly interface for creating campaigns, managing subscribers,
+and tracking email performance, making it a popular choice for businesses
+looking for an affordable, scalable email marketing solution. This module
+implements the Sendy API, whichis based on simple HTTP POST. Use the API to
+integrate Sendy programmatically with your website or application. Some APIs
+may require the latest version of Sendy (currently version 6.1.2).
+
 =head1 METHODS
+
+=over 4
+
+=item C<create>
+
+Creates an email campaign; which can be safed as a draft, scheduled for sending, or sent immediately.
+
+=item C<subscribe>
+
+Subsribes an email address to a list.
+
+=item C<unsubscribe>
+
+Unsubscribes an email address from a list, but keeps it in the list (marks it inactive).
+
+=item C<delete>
+
+Deletes an email address from a list.
+
+=item C<get_subscriber_count>
+
+Returns the number of active subscribers that are in a list.
+
+=item C<get_subscriber_status>
+
+Returns the status of an email address with respect to a specific email list.
+
+=item C<get_brands>
+
+Returns all brands.
+
+=item C<get_lists>
+
+Returns all lists based on a specified brand id.
+
+=back
 
 =head1 C<sendy> COMMANDLINE CLIENT
 
@@ -393,6 +442,47 @@ for use on the commandline or in cron or shell scripts. It's not intended to be
 used inside of Perl scripts. It is recommended the library be used directly inside
 of the Perl scripts. Checkout the source code of C<sendy> to see how to do it, if
 this documentation is not sufficient.
+
+See the section on the L<Environment> below to learn how to set up the required
+configuration file.
+
+B<Commands>
+
+=over 4
+
+=item C<brands>
+
+Returns list of brands by Id to C<STDOUT>.
+
+=item C<count>
+
+Returns count of the specified list to C<STDOUT>.
+
+=item C<create>
+
+Creates an email campaign based on specified options. Status is returned via C<STDOUT>.
+
+=item C<delete>
+
+Deletes the provided email from provided list Id, returns status to C<STDOUT>.
+
+=item C<lists>
+
+Returns list of email lists for provided brand Id to C<STDOUT>.
+
+=item C<status>
+
+Returns status of the provided email address to provided list Id, via C<STDOUT>.
+
+=item C<subscribe>
+
+Subscribes the provided email address to the provided list Id, result returned via C<STDOUT>.
+
+=item C<unsubscribe>
+
+Unsubscribes the provided email address from the provided list Id, result returned via C<STDOUT>.
+
+=back
 
 =head1 ENVIRONMENT
 
