@@ -9,6 +9,7 @@ use Webservice::Sendy::API qw//;
 use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
 
 use constant {
+  VERSION      => 1.0,
   EXIT_SUCCESS => 0,
   EXIT_ERROR   => 1,
 };
