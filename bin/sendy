@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+package local::bin::sendy;
+
 use v5.10;
 use strict;
 use warnings;
@@ -8,8 +10,9 @@ use Dispatch::Fu;
 use Webservice::Sendy::API qw//;
 use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
 
+our $VERSION = 0.1;
+
 use constant {
-  VERSION      => 1.0,
   EXIT_SUCCESS => 0,
   EXIT_ERROR   => 1,
 };
@@ -19,7 +22,35 @@ my $CONFIG = "$HOME/.sendy.ini";
 
 my $subcommand = shift @ARGV;
 
-sub do_help(); # prototype, forward delcaration
+sub do_help() {
+  print STDERR <<EOF;
+sendy Utility version $local::bin::sendy::VERSION - for Sendy 6.1.2+, bundled with Webservice::Sendy::API (https://metacpan.org)
+
+This utility is distributed with the Perl library, Webservice::Sendy::API. It uses
+the library to implement the following subcommands. It is a good example of how
+to use the Perl module directly, since this utility and the module are maintained
+together.
+
+Subcommands:
+
+  count        - list count   
+  create       - create campaign; draft, send now, or schedule send
+  brands       - list brands
+  delete       - delete email address from list
+  lists        - list lists in a given brand Id 
+  subscribe    - subscribe email address given a list Id
+  status       - get status of an email address, given a list Id
+  unsubscribe  - unsubscribe email address given a list Id 
+  help         - print this help 
+  "-h"         - print this help
+  "-v"         - print version banner of this utility, then exit
+
+For more details, type:
+
+  perldoc Webservice::Sendy::API
+
+EOF
+}
 
 #>>>
 dispatch { # Dispatch::Fu
@@ -33,7 +64,9 @@ dispatch { # Dispatch::Fu
   subscribe   => sub { subscribe(\@ARGV) },
   status      => sub { get_subscription_status(\@ARGV) },
   unsubscribe => sub { unsubscribe(\@ARGV) },
-  help        => sub { do_help            },
+  help        => \&do_help,
+  "-h"        => \&do_help,
+  "-v"        => sub { printf "sendy Utility version %s - bundled with Webservice::Sendy::API (https://metacpan.org)\n", $local::bin::sendy::VERSION },
 ;
 #<<<
 
@@ -122,9 +155,7 @@ sub get_lists {
   return EXIT_SUCCESS;
 }
 
-sub do_help() {
-    warn "warning: subcommand may be one of the following: 'help' (prints this!)\n";
-}
+1
 
 __END__
 This seems like something that my long lost brother, Grant, may see; and
