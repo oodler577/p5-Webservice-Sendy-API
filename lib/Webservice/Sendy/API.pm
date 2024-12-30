@@ -385,7 +385,7 @@ utility
     printf "%-3d  %s\n", $brand->id, $brand->name;
   }
 
-B<NOTE:> This module requires a configuration file to be set up. See the L<Environment>
+B<NOTE:> This module requires a configuration file to be set up. See the ENVIRONMENT
 section below to learn more.
 
 =head1 DESCRIPTION
@@ -395,7 +395,7 @@ integrates with Amazon SES (Simple Email Service) to send bulk emails at
 a low cost. It provides a user-friendly interface for creating campaigns,
 managing subscribers, and tracking email performance, making it a popular
 choice for businesses looking for an affordable, scalable email marketing
-solution. This module implements the Sendy API, whichis based on simple HTTP
+solution. This module implements the Sendy API, which is based on simple HTTP
 POST. Use the API to integrate Sendy programmatically with your website or
 application. Some APIs may require the latest version of Sendy (currently
 version 6.1.2). Sendy requires a license to use.
@@ -538,7 +538,7 @@ scripts. It's not intended to be used inside of Perl scripts. It is recommended
 the library be used directly inside of the Perl scripts. Checkout the source
 code of C<sendy> to see how to do it, if this documentation is not sufficient.
 
-See the section on the L<ENVIRONMENT> section below to learn how to set up
+See the section on the ENVIRONMENT section below to learn how to set up
 the required configuration file.
 
 B<Commands>
@@ -655,6 +655,11 @@ Find out about more Perl API clients at L<https://perlclientdirectory.com>.
 This module is meant to be used in production environments, but
 it still needs some maturing. Please report any bugs ASAP, to
 L<https://github.com/oodler577/p5-Webservice-Sendy-API/issues>.
+
+=head1 SEE ALSO
+
+This module is meant to supercede L<Net::Sendy::API>, which has not been
+updated since 2013.
 
 =head1 LICENSE AND COPYRIGHT
 
