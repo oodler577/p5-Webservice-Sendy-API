@@ -4,7 +4,7 @@ use v5.10;
 use strict;
 use warnings;
 
-our $VERSION = 0.2;
+our $VERSION = 0.3;
 
 use HTTP::Tiny;
 use JSON            qw/decode_json/;
@@ -390,6 +390,10 @@ section below to learn more.
 
 =head1 DESCRIPTION
 
+This is a full implementation of Sendy's Web API, version 6.1.2. Please
+alert author if this module has not been updated to support Sendy's latest
+API version.
+
 Sendy is a commercial self-hosted email marketing application that
 integrates with Amazon SES (Simple Email Service) to send bulk emails at
 a low cost. It provides a user-friendly interface for creating campaigns,
@@ -655,6 +659,9 @@ Find out about more Perl API clients at L<https://perlclientdirectory.com>.
 This module is meant to be used in production environments, but
 it still needs some maturing. Please report any bugs ASAP, to
 L<https://github.com/oodler577/p5-Webservice-Sendy-API/issues>.
+
+Please also report an issue if this module no longer supports
+Sendy's latest API version.
 
 =head1 SEE ALSO
 
