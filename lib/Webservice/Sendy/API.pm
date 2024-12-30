@@ -4,7 +4,7 @@ use v5.10;
 use strict;
 use warnings;
 
-our $VERSION = 0.1;
+our $VERSION = 0.2;
 
 use HTTP::Tiny;
 use JSON            qw/decode_json/;
@@ -17,6 +17,9 @@ sub new {
     if (not $self->config) {
       my $HOME = (getpwuid($<))[7];
       $self->config("$HOME/.sendy.ini");
+    }
+    if (not -e $self->config) {
+      die sprintf "Webservice::Sendy::API requires a configuration file! (looking for, '%s')\n", $self->config;
     }
     # update config field with contents of the config file
     $self->config(ini2h2o $self->config);
@@ -387,14 +390,15 @@ section below to learn more.
 
 =head1 DESCRIPTION
 
-Sendy is a self-hosted email marketing application that integrates with Amazon
-SES (Simple Email Service) to send bulk emails at a low cost. It provides
-a user-friendly interface for creating campaigns, managing subscribers,
-and tracking email performance, making it a popular choice for businesses
-looking for an affordable, scalable email marketing solution. This module
-implements the Sendy API, whichis based on simple HTTP POST. Use the API to
-integrate Sendy programmatically with your website or application. Some APIs
-may require the latest version of Sendy (currently version 6.1.2).
+Sendy is a commercial self-hosted email marketing application that
+integrates with Amazon SES (Simple Email Service) to send bulk emails at
+a low cost. It provides a user-friendly interface for creating campaigns,
+managing subscribers, and tracking email performance, making it a popular
+choice for businesses looking for an affordable, scalable email marketing
+solution. This module implements the Sendy API, whichis based on simple HTTP
+POST. Use the API to integrate Sendy programmatically with your website or
+application. Some APIs may require the latest version of Sendy (currently
+version 6.1.2). Sendy requires a license to use.
 
 Some sanity checking is done in the wrapper functions, but Sendy's API tend
 to do a good job of validation on the server side, and their error messages
@@ -403,10 +407,10 @@ validation is provided by this module and error messages are passed directly
 to the caller.
 
 Sendy's API is not really I<RESTful> because it doesn't use the HTTP status
-field. All calls return a C<200 OK>, therefore the L<HTTP::Tiny> module that
-is used as the user agent in this module is forced to assume all calls are
-successful. In order to determine an error, the actual content of the response
-must be checked. This module does do that.
+field. All calls return a C<200 OK>, therefore the L<HTTP::Tiny> module
+that is used as the user agent in this module is forced to assume all calls
+are successful. In order to determine an error, the actual content of the
+response must be checked. This module does do that.
 
 =head1 METHODS
 
@@ -414,20 +418,22 @@ must be checked. This module does do that.
 
 =item C<create_campaign>
 
-Creates an email campaign; which can be safed as a draft, scheduled for sending,
-or sent immediately.
+Creates an email campaign; which can be saved as a draft, scheduled for
+sending, or sent immediately.
 
 It is a FATAL error if title, subject, and html_text is not provided; the
 other fields required by the API can use defaults in the configuration file,
 listed after the check:
 
-B<Required fields:> from_name*, from_email*, reply_to*, title, subject, html_text, list_ids*,
-brand_id*, track_opens, track_clicks, send_campaign (* = uses defaults in C<.sendy.ini>)
+B<Required fields:> from_name*, from_email*, reply_to*, title, subject,
+html_text, list_ids*, brand_id*, track_opens, track_clicks, send_campaign
+(* = uses defaults in C<.sendy.ini>)
 
-B<Optional fields:> plain_text, segment_ids, exclude_list_ids, query_string, schedule_date_time,
-schedule_timezone
+B<Optional fields:> plain_text, segment_ids, exclude_list_ids, query_string,
+schedule_date_time, schedule_timezone
 
-See more information about the call on Sendy's specification, L<https://sendy.co/api#create-send-campaigns>.
+See more information about the call on Sendy's specification,
+L<https://sendy.co/api#create-send-campaigns>.
 
 =item C<subscribe>
 
@@ -438,13 +444,16 @@ B<Required fields:> email, list_id
 B<Optional fields:> name, country, ipaddress, referrer, gdpr, silent, hp*
 
 * C<hp> is a I<honey pot> field, if it is populated then the server side
-handler assumes it's been submitted by a bot, and will fail. So don't use it.
+handler assumes it's been submitted by a bot, and will fail. So don't use
+it unless you're a super smat AI bot.
 
-For a full description of the fields is available at L<https://sendy.co/api#subscribe>.
+For a full description of the fields is available at
+L<https://sendy.co/api#subscribe>.
 
 =item C<unsubscribe>
 
-Unsubscribes an email address from a list, but keeps it in the list (marks it inactive).
+Unsubscribes an email address from a list, but keeps it in the list (marks
+it inactive).
 
 B<Required fields:> email, list_id
 
@@ -452,10 +461,11 @@ If not provided, C<list_id> is pulled from the configuration file (if set).
 
 This method automatically sets the field I<boolean> to C<true>; this is so the
 response if plain-text. There is no way to change this value without modifying
-the module. The alternative is to parse through a mess of HTML. This can me changed
-in future versions, but feedback is needed to know if this is useful.
+the module. The alternative is to parse through a mess of HTML. This can me
+changed in future versions, but feedback is needed to know if this is useful.
 
-For a full description of the fields is available at L<https://sendy.co/api#unsubscribe>.
+For a full description of the fields is available at
+L<https://sendy.co/api#unsubscribe>.
 
 =item C<delete>
 
@@ -467,10 +477,11 @@ If not provided, C<list_id> is pulled from the configuration file (if set).
 
 This method automatically sets the field I<boolean> to C<true>; this is so the
 response if plain-text. There is no way to change this value without modifying
-the module. The alternative is to parse through a mess of HTML. This can me changed
-in future versions, but feedback is needed to know if this is useful.
+the module. The alternative is to parse through a mess of HTML. This can me
+changed in future versions, but feedback is needed to know if this is useful.
 
-For a full description of the fields is available at L<https://sendy.co/api#delete-subscriber>.
+For a full description of the fields is available at
+L<https://sendy.co/api#delete-subscriber>.
 
 =item C<get_subscriber_count>
 
@@ -480,7 +491,8 @@ B<Required fields:> list_id
 
 If not provided, C<list_id> is pulled from the configuration file (if set).
 
-For a full description of the fields is available at L<https://sendy.co/api#subscriber-count>.
+For a full description of the fields is available at
+L<https://sendy.co/api#subscriber-count>.
 
 =item C<get_subscriber_status>
 
@@ -490,39 +502,44 @@ B<Required fields:> email, list_id
 
 If not provided, C<list_id> is pulled from the configuration file (if set).
 
-For a full description of the fields is available at L<https://sendy.co/api#subscription-status>.
+For a full description of the fields is available at
+L<https://sendy.co/api#subscription-status>.
 
 =item C<get_brands>
 
-No fields are required, C<brands> are the highest level of entities available to list. All other
-calls require either a C<brand_id> or C<list_id>(s) to be specified.
+No fields are required, C<brands> are the highest level of entities available
+to list. All other calls require either a C<brand_id> or C<list_id>(s)
+to be specified.
 
 Returns all brands. Brand Ids are numbers (1 through #brands).
 
-For a full description of the fields is available at L<https://sendy.co/api#get-brands>.
+For a full description of the fields is available at
+L<https://sendy.co/api#get-brands>.
 
 =item C<get_lists>
 
-Returns all lists based on a specified brand id. List Ids are alphanumeric hashes, therefore
-calls that operate using list specifier(s) do not also need to know the associated C<brand_id>..
+Returns all lists based on a specified brand id. List Ids are alphanumeric
+hashes, therefore calls that operate using list specifier(s) do not also
+need to know the associated C<brand_id>.
 
 B<Required fields:> brand_id
 
-For a full description of the fields is available at L<https://sendy.co/api#get-brands>.
+For a full description of the fields is available at
+L<https://sendy.co/api#get-brands>.
 
 =back
 
 =head1 C<sendy> COMMANDLINE CLIENT
 
-When installed, this module provides the commandline client, C<sendy>. This script
-is both a real tool and a reference implementation for a useful client. It is meant
-for use on the commandline or in cron or shell scripts. It's not intended to be
-used inside of Perl scripts. It is recommended the library be used directly inside
-of the Perl scripts. Checkout the source code of C<sendy> to see how to do it, if
-this documentation is not sufficient.
+When installed, this module provides the commandline client, C<sendy>. This
+script is both a real tool and a reference implementation for a useful
+client. It is meant for use on the commandline or in cron or shell
+scripts. It's not intended to be used inside of Perl scripts. It is recommended
+the library be used directly inside of the Perl scripts. Checkout the source
+code of C<sendy> to see how to do it, if this documentation is not sufficient.
 
-See the section on the L<Environment> below to learn how to set up the required
-configuration file.
+See the section on the L<ENVIRONMENT> section below to learn how to set up
+the required configuration file.
 
 B<Commands>
 
@@ -546,7 +563,8 @@ Usage
 
 =item C<create>
 
-Creates an email campaign based on specified options. Status is returned via C<STDOUT>.
+Creates an email campaign based on specified options. Status is returned
+via C<STDOUT>.
 
 Usage,
 
@@ -558,7 +576,8 @@ Deletes the provided email from provided list Id, returns status to C<STDOUT>.
 
 Usage
 
-  sendy delete [--config alt-config.ini] --list_id LISTID --email email@domain.tld
+  sendy delete [--config alt-config.ini] --list_id LISTID --email
+  email@domain.tld
 
 =item C<lists>
 
@@ -570,31 +589,40 @@ Usage
 
 =item C<status>
 
-Returns status of the provided email address to provided list Id, via C<STDOUT>.
+Returns status of the provided email address to provided list Id, via
+C<STDOUT>.
 
 Usage
 
-  sendy status [--config alt-config.ini] --list_id LISTID --email email@domain.tld
+  sendy status [--config alt-config.ini] --list_id LISTID --email
+  email@domain.tld
 
 =item C<subscribe>
 
-Subscribes the provided email address to the provided list Id, result returned via C<STDOUT>.
+Subscribes the provided email address to the provided list Id, result returned
+via C<STDOUT>.
 
 Usage
 
-  sendy subscribe [--config alt-config.ini] --list_id LISTID --email email@domain.tld
+  sendy subscribe [--config alt-config.ini] --list_id LISTID --email
+  email@domain.tld
 
 =item C<unsubscribe>
 
-Unsubscribes the provided email address from the provided list Id, result returned via C<STDOUT>.
+Unsubscribes the provided email address from the provided list Id, result
+returned via C<STDOUT>.
 
 Usage
 
-  sendy unsubscribe [--config alt-config.ini] --list_id LISTID --email email@domain.tld
+  sendy unsubscribe [--config alt-config.ini] --list_id LISTID --email
+  email@domain.tld
 
 =back
 
 =head1 ENVIRONMENT
+
+This module requires a configuration file, which may sound unusual. But it's
+the best way to manage API secrets. Please see below.
 
 =head2 C<$HOME/.sendy.ini> Configuration
 
@@ -605,7 +633,7 @@ mode or automatically change permissions on the file.
 
   ; defaults used for specified options
   [defaults]
-  api_key=sOmekeyFromSendy
+  api_key=sOmekeyFromYourSendy
   base_url=https://my.domain.tld/sendy
   brand_id=1
   list_id=mumdsQnpwnazscoOzKJ763Ow
@@ -620,11 +648,13 @@ mode or automatically change permissions on the file.
 
 Brett Estrade L<< <oodler@cpan.org> >>
 
-Visit me at L<https://perlclientdirectory.com>.
+Find out about more Perl API clients at L<https://perlclientdirectory.com>.
 
 =head1 BUGS
 
-Please report.
+This module is meant to be used in production environments, but
+it still needs some maturing. Please report any bugs ASAP, to
+L<https://github.com/oodler577/p5-Webservice-Sendy-API/issues>.
 
 =head1 LICENSE AND COPYRIGHT
 
