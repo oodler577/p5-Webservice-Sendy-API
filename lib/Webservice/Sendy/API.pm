@@ -4,7 +4,7 @@ use v5.10;
 use strict;
 use warnings;
 
-our $VERSION = 0.4;
+our $VERSION = 0.5;
 
 use HTTP::Tiny;
 use JSON            qw/decode_json/;
@@ -58,8 +58,8 @@ sub create_campaign {
     reply_to      => $self->config->campaign->reply_to,
     brand_id      => $self->config->defaults->brand_id,
     list_ids      => $self->config->defaults->list_id,
-    track_opens   => 0,
-    track_clicks  => 0,
+    track_clicks  => ($params->no_track_clicks) ? 0 : 1, # --no_track_clicks
+    track_opens   => ($params->no_track_opens)  ? 0 : 1, # --no_track_opens
     send_campaign => 0,
   };
 
@@ -71,7 +71,7 @@ sub create_campaign {
     }
     # FATAL for anything in $required_defaults set to 'undef'
     elsif (not defined $params->$param and not defined $required_defaults->$param) {
-      die sprintf "[campaign] creation requires: %s; died on '%s'\n", join(",", keys %$required_defaults), $param;
+      die sprintf "[campaign] Missing '%s' flag; creation requires: %s'\n", $param, join(",", keys %$required_defaults);
     }
     $required_options->{$param} = $params->$param;
   }
@@ -420,12 +420,19 @@ other fields required by the API can use defaults in the configuration file,
 listed after the check:
 
 B<Required fields:> from_name*, from_email*, reply_to*, title, subject,
-html_text, list_ids*, brand_id*, track_opens, track_clicks, send_campaign
+html_text, list_ids*, brand_id*, no_track_opens, no_track_clicks, send_campaign
 (* = uses defaults in C<.sendy.ini>)
 
 B<Optional fields:> plain_text, segment_ids, exclude_list_ids, query_string,
 schedule_date_time, schedule_timezone
 
+NOTE: Unless C<no_track_opens> and C<no_track_clicks> are set to I<1>
+value, the campaign created will have them I<ON>, respectively. In the C<sendy>
+tool, this means that to turn off tracking, you'd need to supply the flags,
+C<--no_track_opens --no_track_clicks>; in a similar way, the default behavior
+will always be to just create a draft. Therefore, to send the actual email
+campaign via this command, the C<send_campaign> flag must be set to I<1>.
+ 
 See more information about the call on Sendy's specification,
 L<https://sendy.co/api#create-send-campaigns>.
 
@@ -559,6 +566,14 @@ Usage
 
 Creates an email campaign based on specified options. Status is returned
 via C<STDOUT>.
+
+By default full tracking is enabled. To turn off tracking, use the flags,
+C<--no_track_opens> and C<--no_track_clicks>.
+
+To send right away, rather than just creating a draft; use the
+C<--send_campaign> flag. There is currently no support to schedule the
+sending of a campaign at a later time. Please let me know if you need this
+ability. Otherwise it'll get implemented if and when I needed it.
 
 Usage,
 
