@@ -4,7 +4,7 @@ use v5.10;
 use strict;
 use warnings;
 
-our $VERSION = 0.3;
+our $VERSION = 0.4;
 
 use HTTP::Tiny;
 use JSON            qw/decode_json/;
@@ -34,7 +34,6 @@ sub form_data {
   };
 }
 
-# .. modify for create_campaign
 sub create_campaign {
   my $self     = shift;
   my $params   = {@_};
@@ -93,7 +92,7 @@ sub create_campaign {
   if ($resp->content and $resp->content =~ m/Already|missing|not|valid|Unable/i) {
     my $msg = $resp->content;
     $msg =~ s/\.$//g;
-    die sprintf "[create] Server replied: %s!\n", $msg;
+    die sprintf "[campaign] Server replied: %s!\n", $msg;
   }
 
   # report general failure (it is not clear anything other than HTTP Status of "200 OK" is returned)
@@ -101,33 +100,7 @@ sub create_campaign {
     die sprintf("Server Replied: HTTP Status %s %s\n", $resp->status, $resp->reason);
   }
 
-ddd $resp;
-
-  #return sprintf "%s %s %s\n", ($resp->content eq "1")?"Subscribed":$resp->content, $params->list_id, $params->email;
-}
-
-
-sub _country_codes {
-  return qw(
-    AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ
-    BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS
-    BT BU BV BW BY BZ CA CC CD CF CG CH CI CK CL CM
-    CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ
-    EC EE EG EH ER ES ET FI FJ FM FO FR GA GB GD
-    GE GF GG GH GI GL GM GN GP GQ GR GT GU GW GY
-    HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS
-    IT JE JM JO JP KE KG KH KI KM KN KP KR KW
-    KY KZ LA LB LC LI LK LR LS LT LU LV LY
-    MA MB MC MD ME MF MG MH MK ML MM MN MO MP
-    MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF
-    NG NI NL NO NP NR NU NZ OM PA PE PF PG PH
-    PK PL PM PN PR PT PW PY QA RE RO RS RU RW
-    SA SB SC SD SE SG SH SI SJ SK SL SM SN
-    SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ
-    TK TL TM TN TO TR TT TV TZ UA UG US UY
-    UZ VA VC VE VG VI VN VU WF WG WS YE YT ZA
-    ZM ZW
-  );
+  return $resp->content;
 }
 
 sub subscribe {
@@ -373,7 +346,7 @@ utility
 
 =head1 SYNOPSIS
 
-  use v5.10;   # enables "say" and turns on "use warnings;"
+  use v5.10;
   use strict;
   use Webservice::Sendy::API qw//;
   
@@ -385,8 +358,24 @@ utility
     printf "%-3d  %s\n", $brand->id, $brand->name;
   }
 
-B<NOTE:> This module requires a configuration file to be set up. See the ENVIRONMENT
-section below to learn more.
+B<NOTE:> This module requires a configuration file  (defaults to C<$HOME/.sendy.ini>)
+to be set up. See the ENVIRONMENT section below to learn more.
+
+  ; defaults used for specified options
+  [defaults]
+  api_key=sOmekeyFromYourSendy
+  base_url=https://my.domain.tld/sendy
+  brand_id=1
+  list_id=mumdsQnpwnazscoOzKJ763Ow
+  
+  ; campaign information used for default brand_id 
+  [campaign]
+  from_name=List Sender Name
+  from_email=your-email-list@domain.tld
+  reply_to=some-other-reply-to@domain.tld
+
+Save this file as C<$HOM/.sendy.ini>, and you may start to use the
+C<sendy> commandline utility.
 
 =head1 DESCRIPTION
 

@@ -78,7 +78,7 @@ sub create_campaign {
   my $o      = Getopt2h2o $argv, { config => $CONFIG }, @opts;
   my $sendy  = Webservice::Sendy::API->new(config => $o->config);
   my $result = $sendy->create_campaign(%{o2d $o});
-  print $result;
+  say $result;
   exit EXIT_SUCCESS;
 }
 
