@@ -11,3 +11,8 @@
 
 0.3	Mon Dec 30 07:00:33 PM UTC 2024
 	- POD tweaks
+
+0.4	Thu Jan 2 07:00:33 PM UTC 2024
+	- completed "create" support, which was
+	  lacking a final message on success
+	- POD tweaks

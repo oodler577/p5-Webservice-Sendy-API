@@ -350,7 +350,8 @@ utility
   use strict;
   use Webservice::Sendy::API qw//;
   
-  my $sendy  = Webservice::Sendy::API->new; # looks for default config file 
+  # constructor looks for default config file if not provided ..
+  my $sendy  = Webservice::Sendy::API->new;
   my $brands = $sendy->get_brands;
   
   foreach my $key (sort keys %$brands) {
@@ -641,7 +642,7 @@ mode or automatically change permissions on the file.
 
 Brett Estrade L<< <oodler@cpan.org> >>
 
-Find out about more Perl API clients at L<https://perlclientdirectory.com>.
+Find out about this client and more Perl API clients at L<https://PerlClientDirectory.com>.
 
 =head1 BUGS
 

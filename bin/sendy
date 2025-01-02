@@ -10,7 +10,7 @@ use Dispatch::Fu;
 use Webservice::Sendy::API qw//;
 use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
 
-our $VERSION = 0.3;
+our $VERSION = 0.4;
 
 use constant {
   EXIT_SUCCESS => 0,
