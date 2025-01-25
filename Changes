@@ -38,3 +38,6 @@
 	  both passed, there is a warning via STDERR
 	  and the file contents override the text
 	  sent via "--html_text"
+
+0.7	Fri Jan 24 10:00:00 PM UTC 2025
+	- fixed minor issue

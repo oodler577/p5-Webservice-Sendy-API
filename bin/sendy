@@ -10,7 +10,7 @@ use Dispatch::Fu;
 use Webservice::Sendy::API qw//;
 use Util::H2O::More        qw/ddd Getopt2h2o ini2h2o o2d/;
 
-our $VERSION = 0.6;
+our $VERSION = 0.7;
 
 use constant {
   EXIT_SUCCESS => 0,
@@ -81,7 +81,7 @@ sub create_campaign {
   my $o      = Getopt2h2o $argv, { config => $CONFIG, no_track_clicks => 0, no_track_opens => 0 }, @opts;
 
   if ($o->html_file) {
-    warn "WARNING: '--html_file' contents override '--html_text'!\n";
+    warn "WARNING: '--html_file' contents override '--html_text'!\n" if $o->html_text;
     open my $fh, "<", $o->html_file || die $!;
     my $html = do { local $/; <$fh> };
     $o->html_text($html);
